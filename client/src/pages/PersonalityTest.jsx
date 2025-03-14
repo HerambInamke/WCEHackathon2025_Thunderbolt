@@ -34,7 +34,7 @@ const PersonalityTest = ({ setNavbarVisible }) => {
 
   // Listen for fullscreen change and tab visibility change
   useEffect(() => {
-    // enterFullscreen(); // Enter fullscreen on component mount
+    enterFullscreen(); // Enter fullscreen on component mount
 
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
@@ -48,8 +48,8 @@ const PersonalityTest = ({ setNavbarVisible }) => {
       }
     };
 
-    // document.addEventListener('fullscreenchange', handleFullscreenChange);
-    // document.addEventListener('visibilitychange', handleTabChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('visibilitychange', handleTabChange);
 
     setNavbarVisible(false); // Hide navbar when the test starts
 

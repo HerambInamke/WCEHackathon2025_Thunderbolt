@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const SkillAssessmentResults = ({ result, career }) => {
+const SkillAssessmentResults = () => {
+  const location = useLocation();
+  const { result, career } = location.state || {};
   const [reviewRating, setReviewRating] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [showError, setShowError] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const navigate = useNavigate()
 
   const handleRatingChange = (rating) => {
     setReviewRating(rating);
@@ -34,6 +38,7 @@ const SkillAssessmentResults = ({ result, career }) => {
     }
     // Navigation logic would go here
     console.log("Continuing to Career Exploration");
+    navigate("/explore")
     // You could use navigation here, e.g., router.push('/career-exploration')
   };
 
@@ -42,8 +47,8 @@ const SkillAssessmentResults = ({ result, career }) => {
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Skill Assessment Results</h1>
       <div className="bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Your Score: {result.percentage}%</h2>
-          <p className="text-gray-600 mt-2">You answered {result.correctCount} out of {result.totalQuestions} questions correctly.</p>
+          <h2 className="text-2xl font-bold text-gray-900">Your Score: {result?.percentage}%</h2>
+          <p className="text-gray-600 mt-2">You answered {result?.correctCount} out of {result?.totalQuestions} questions correctly.</p>
         </div>
         
         <h3 className="text-lg font-medium text-gray-900 mb-4">Skill Gap Analysis</h3>

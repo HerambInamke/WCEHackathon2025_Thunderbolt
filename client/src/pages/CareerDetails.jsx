@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 function CareerDetails() {
   const { name } = useParams();
-  console.log(name)
   const navigate = useNavigate();
   const [career, setCareer] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');

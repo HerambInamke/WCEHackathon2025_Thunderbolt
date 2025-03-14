@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import PersonalityTest from "./pages/PersonalityTest";
 import Results from "./pages/Results"
 import BookAppointment from "./pages/BookAppointment"
+import SkillAssessmentTest from "./pages/SkillAssessmentTest";
+import SkillAssessmentInstructions from "./pages/SkillAssessmentInstructions"
+import SkillAssessmentResults from "./pages/SkillAssessmentResults"
 
 function App() {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -94,6 +97,9 @@ function App() {
               <Route path="/test" element={<ProtectedRoute><PersonalityTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
               <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
               <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>}/>
+              <Route path="/skill-assessment/instructions/:careerId" element={<SkillAssessmentInstructions />} />
+              <Route path="/skill-assessment/:careerId" element={<ProtectedRoute><SkillAssessmentTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
+              <Route path="/skill-assessment/results" element={<ProtectedRoute><SkillAssessmentResults /></ProtectedRoute>} />
             </Routes>
           </main>
         </div>

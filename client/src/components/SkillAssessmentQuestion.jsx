@@ -1,30 +1,38 @@
 import React from 'react';
 
-function SkillAssessmentQuestion({ question, selectedAnswer, onAnswerSelect }) {
+function SkillAssessmentQuestion({ index, question, selectedAnswer, onAnswerSelect }) {
+  // Create an array of options for easier handling
+  const options = [
+    question.option1,
+    question.option2,
+    question.option3,
+    question.option4
+  ];
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex items-start mb-4">
         <div className="flex-shrink-0 bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center mr-3">
-          {question.id}
+          {index + 1}
         </div>
         <h3 className="text-lg font-medium text-gray-800">{question.question}</h3>
       </div>
-      
+     
       <div className="ml-11 space-y-3">
-        {question.options.map((option, index) => (
-          <div 
-            key={index}
+        {options.map((option, optionIndex) => (
+          <div
+            key={optionIndex}
             className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-              selectedAnswer === option 
-                ? 'border-blue-500 bg-blue-50' 
+              selectedAnswer === option
+                ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
             }`}
-            onClick={() => onAnswerSelect(question.id, option)}
+            onClick={() => onAnswerSelect(index, option)}
           >
             <div className="flex items-center">
               <div className={`w-5 h-5 rounded-full border flex-shrink-0 mr-3 flex items-center justify-center ${
-                selectedAnswer === option 
-                  ? 'border-blue-500 bg-blue-500' 
+                selectedAnswer === option
+                  ? 'border-blue-500 bg-blue-500'
                   : 'border-gray-300'
               }`}>
                 {selectedAnswer === option && (
@@ -38,11 +46,11 @@ function SkillAssessmentQuestion({ question, selectedAnswer, onAnswerSelect }) {
           </div>
         ))}
       </div>
-      
+     
       <div className="mt-4 ml-11">
         <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-          question.difficulty === 'beginner' 
-            ? 'bg-green-100 text-green-800' 
+          question.difficulty === 'beginner'
+            ? 'bg-green-100 text-green-800'
             : question.difficulty === 'intermediate'
               ? 'bg-yellow-100 text-yellow-800'
               : 'bg-red-100 text-red-800'
@@ -54,4 +62,4 @@ function SkillAssessmentQuestion({ question, selectedAnswer, onAnswerSelect }) {
   );
 }
 
-export default SkillAssessmentQuestion; 
+export default SkillAssessmentQuestion;

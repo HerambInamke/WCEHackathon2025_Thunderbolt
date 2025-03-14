@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getQuestionsForCareer } from '../data/skillAssessmentQuestions';
-import { careers } from '../data/careers';
 import SkillAssessmentQuestion from '../components/SkillAssessmentQuestion';
+import { getSkillAssessmentQuestions } from '../utils/getQuestions';
 
 function SkillAssessmentTest({ setNavbarVisible }) {
   const { careerId } = useParams();
@@ -13,21 +12,41 @@ function SkillAssessmentTest({ setNavbarVisible }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState(null);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [isLoading, setIsLoading] = useState(true); // New loading state
 
   useEffect(() => {
     setNavbarVisible(false); // Hide navbar when the test starts
 
-    // Find the career by ID
-    const selectedCareer = careers.find(c => c.id === parseInt(careerId));
-    if (selectedCareer) {
-      setCareer(selectedCareer);
-      // Get questions for this career
-      const careerQuestions = getQuestionsForCareer(parseInt(careerId));
-      setQuestions(careerQuestions);
-    } else {
-      // Redirect if career not found
-      navigate('/');
-    }
+    // Fetch the career by name
+    const fetchCareer = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/careers/careername', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ name: careerId }), // Use careerId as the name
+        });
+
+        if (!response.ok) {
+          throw new Error('Career not found');
+        }
+
+        const selectedCareer = await response.json();
+        setCareer(selectedCareer);
+
+        const careerQuestions = await getSkillAssessmentQuestions(selectedCareer.name)
+
+    setQuestions(careerQuestions);
+
+        setIsLoading(false); // Set loading to false after questions are fetched
+      } catch (error) {
+        console.error(error);
+        navigate('/'); // Redirect if career not found
+      }
+    };
+
+    fetchCareer();
 
     return () => {
       setNavbarVisible(true); // Show navbar when the test ends
@@ -35,58 +54,54 @@ function SkillAssessmentTest({ setNavbarVisible }) {
   }, [careerId, navigate, setNavbarVisible]);
 
   // Fullscreen logic
-  useEffect(() => {
-    const enterFullscreen = () => {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen();
-      }
-    };
+  const enterFullscreen = () => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
+  };
 
+  // Function to exit fullscreen
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    }
+  };
+
+  // Listen for fullscreen change and tab visibility change
+  useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        // Automatically submit with a score of 0 if fullscreen is exited
-        setResult({
-          correctCount: 0,
-          totalQuestions: questions.length,
-          percentage: 0,
-          skillLevel: "Failed"
-        });
-        handleSubmit(); // End test if fullscreen is exited
+        window.location.href = '/'; // Redirect to home if fullscreen is exited
       }
     };
 
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Automatically submit with a score of 0 if the tab is not active
-        setResult({
-          correctCount: 0,
-          totalQuestions: questions.length,
-          percentage: 0,
-          skillLevel: "Failed"
-        });
-        handleSubmit(); // End test if tab is changed
+    const handleTabChange = () => {
+      if (document.visibilityState === 'hidden') {
+        window.location.href = '/'; // Redirect to home if the user switches tabs
       }
     };
 
-    enterFullscreen();
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // document.addEventListener('fullscreenchange', handleFullscreenChange);
+    // document.addEventListener('visibilitychange', handleTabChange);
+
+    setNavbarVisible(false); // Hide navbar when the test starts
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      document.exitFullscreen(); // Ensure fullscreen exits on unmount
+      document.removeEventListener('visibilitychange', handleTabChange);
+      exitFullscreen(); // Ensure fullscreen exits on unmount
+      setNavbarVisible(true); // Show navbar when the test ends
     };
-  }, []);
+  }, [setNavbarVisible]);
 
   // Timer countdown
   useEffect(() => {
     if (timeLeft <= 0 || result) return;
-    
+
     const timer = setTimeout(() => {
       setTimeLeft(timeLeft - 1);
     }, 1000);
-    
+
     return () => clearTimeout(timer);
   }, [timeLeft, result]);
 
@@ -98,10 +113,12 @@ function SkillAssessmentTest({ setNavbarVisible }) {
   };
 
   // Handle answer selection
-  const handleAnswerSelect = (questionId, answer) => {
+  // Handle answer selection - FIXED: Now receiving question index and option index (0-3)
+  const handleAnswerSelect = (questionIndex, optionIndex) => {
+    console.log(questionIndex, optionIndex)
     setAnswers(prev => ({
       ...prev,
-      [questionId]: answer
+      [questionIndex]: optionIndex // Store the option index (0, 1, 2, or 3)
     }));
   };
 
@@ -109,15 +126,16 @@ function SkillAssessmentTest({ setNavbarVisible }) {
   const calculateResults = () => {
     let correctCount = 0;
     let totalQuestions = questions.length;
-    
-    questions.forEach(question => {
-      if (answers[question.id] === question.correctAnswer) {
+    console.log(answers)
+    questions.forEach((question, index) => {
+      // Ensure that the correct answer is being compared correctly
+      if (answers[index] !== undefined && answers[index] === question.correctAnswer) { // Compare using index
         correctCount++;
       }
     });
-    
+
     const percentage = Math.round((correctCount / totalQuestions) * 100);
-    
+
     let skillLevel;
     if (percentage >= 80) {
       skillLevel = "Advanced";
@@ -126,7 +144,7 @@ function SkillAssessmentTest({ setNavbarVisible }) {
     } else {
       skillLevel = "Beginner";
     }
-    
+
     return {
       correctCount,
       totalQuestions,
@@ -139,20 +157,14 @@ function SkillAssessmentTest({ setNavbarVisible }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate API call delay
     setTimeout(() => {
       const testResult = calculateResults();
       setResult(testResult);
       setIsSubmitting(false);
+      navigate('/skill-assessment/results', { state: { result: testResult, career } });
     }, 1500);
-  };
-
-  // Handle retaking the test
-  const handleRetakeTest = () => {
-    setAnswers({});
-    setResult(null);
-    setTimeLeft(300);
   };
 
   // Handle going back to career exploration
@@ -160,23 +172,29 @@ function SkillAssessmentTest({ setNavbarVisible }) {
     navigate('/');
   };
 
-  if (!career) {
+  if (!career || isLoading) { // Check for loading state
     return (
       <div className="max-w-4xl mx-auto px-4 py-12 flex justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        {isLoading && <p>Loading questions, please wait...</p>} {/* Loading message */}
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
+      {/* Button to enter fullscreen */}
+      <button onClick={enterFullscreen} className="mb-4 px-4 py-2 bg-blue-600 text-white rounded">
+        Start Fullscreen
+      </button>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">{career.name} Skill Assessment</h1>
           <p className="text-gray-600 mt-2">Test your knowledge of key skills for this career path</p>
         </div>
-        
+
         {!result && (
           <div className="mt-4 md:mt-0 bg-blue-100 text-blue-800 px-4 py-2 rounded-lg flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -191,25 +209,25 @@ function SkillAssessmentTest({ setNavbarVisible }) {
       {!result ? (
         <form onSubmit={handleSubmit}>
           {/* Questions */}
-          {questions.map(question => (
+          {questions.map((question, index) => (
             <SkillAssessmentQuestion
-              key={question.id}
+              key={index}
+              index={index} // Use index as the key
               question={question}
-              selectedAnswer={answers[question.id]}
+              selectedAnswer={answers[index]} // Use index to get the selected answer
               onAnswerSelect={handleAnswerSelect}
             />
           ))}
-          
+
           {/* Submit button */}
           <div className="mt-8 flex justify-end">
             <button
               type="submit"
               disabled={isSubmitting || Object.keys(answers).length !== questions.length}
-              className={`px-6 py-3 rounded-lg font-medium ${
-                isSubmitting || Object.keys(answers).length !== questions.length
+              className={`px-6 py-3 rounded-lg font-medium ${isSubmitting || Object.keys(answers).length !== questions.length
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
+                }`}
             >
               {isSubmitting ? (
                 <span className="inline-block animate-spin mr-2">⟳</span>
@@ -218,7 +236,7 @@ function SkillAssessmentTest({ setNavbarVisible }) {
               )}
             </button>
           </div>
-          
+
           {/* Progress indicator */}
           <div className="mt-4">
             <div className="flex justify-between text-sm text-gray-600 mb-1">
@@ -226,8 +244,8 @@ function SkillAssessmentTest({ setNavbarVisible }) {
               <span>{Math.round((Object.keys(answers).length / questions.length) * 100)}% complete</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
-              <div 
-                className="bg-blue-600 h-2.5 rounded-full" 
+              <div
+                className="bg-blue-600 h-2.5 rounded-full"
                 style={{ width: `${(Object.keys(answers).length / questions.length) * 100}%` }}
               ></div>
             </div>
@@ -237,13 +255,12 @@ function SkillAssessmentTest({ setNavbarVisible }) {
         // Results section
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="text-center mb-6">
-            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-4 ${
-              result.percentage >= 80 
-                ? 'bg-green-100 text-green-800' 
-                : result.percentage >= 50 
-                  ? 'bg-yellow-100 text-yellow-800' 
+            <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full mb-4 ${result.percentage >= 80
+                ? 'bg-green-100 text-green-800'
+                : result.percentage >= 50
+                  ? 'bg-yellow-100 text-yellow-800'
                   : 'bg-red-100 text-red-800'
-            }`}>
+              }`}>
               <span className="text-3xl font-bold">{result.percentage}%</span>
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Your Skill Level: {result.skillLevel}</h2>
@@ -251,10 +268,10 @@ function SkillAssessmentTest({ setNavbarVisible }) {
               You answered {result.correctCount} out of {result.totalQuestions} questions correctly
             </p>
           </div>
-          
+
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">What's Next?</h3>
-            
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <h4 className="font-medium text-blue-800 mb-2">Recommended Learning Path:</h4>
               <ul className="list-disc list-inside text-blue-700 space-y-1">
@@ -263,14 +280,8 @@ function SkillAssessmentTest({ setNavbarVisible }) {
                 ))}
               </ul>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                onClick={handleRetakeTest}
-                className="px-6 py-3 bg-white border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 font-medium"
-              >
-                Retake Test
-              </button>
               <button
                 onClick={handleBackToExploration}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
