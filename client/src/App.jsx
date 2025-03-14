@@ -37,7 +37,9 @@ function App() {
                 <div className="flex justify-between h-16">
                   <div className="flex items-center">
                     <Link to="/" className="flex-shrink-0">
-                      <span className="text-xl font-bold text-blue-600">CareerCompass</span>
+                      <h1 className="text-2xl font-bold">
+                        Career<span className="text-blue-600">Compass</span>
+                      </h1>
                     </Link>
                     <div className="hidden md:ml-8 md:flex md:space-x-8">
                       <Link to="/explore" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
