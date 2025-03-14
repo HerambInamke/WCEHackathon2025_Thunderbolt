@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios'; // Import axios for making HTTP requests
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const SkillAssessmentResults = () => {
+  const auth = getAuth();
+  const db = getFirestore();
+  const user = auth.currentUser;
   const location = useLocation();
   const { result, career } = location.state || {};
   const [reviewRating, setReviewRating] = useState('');
@@ -9,6 +15,29 @@ const SkillAssessmentResults = () => {
   const [showError, setShowError] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const navigate = useNavigate()
+
+  useEffect(()=>{
+    let addResultToDb = async () =>{
+      try {
+        const email = auth.currentUser.email; // Replace with actual user email from auth context or state
+        const careerName = career.name; // Assuming career object has a name property
+        const score = result.percentage; // Assuming result object has a percentage property
+  
+        await axios.post('http://localhost:3000/careers/addSkillTestResult', {
+          email,
+          careerName,
+          score,
+        });
+  
+        setShowError(false);
+      } catch (error) {
+        console.error("Error submitting skill test result:", error);
+        setShowError(true);
+      }
+    } 
+
+    addResultToDb()
+  },[])
 
   const handleRatingChange = (rating) => {
     setReviewRating(rating);
@@ -20,12 +49,11 @@ const SkillAssessmentResults = () => {
     if (showError) setShowError(false);
   };
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (reviewRating && reviewText.trim()) {
       // Here you would typically send the review data to your backend
       console.log("Review submitted:", { rating: reviewRating, text: reviewText });
-      setReviewSubmitted(true);
-      setShowError(false);
+      setReviewSubmitted(true)
     } else {
       setShowError(true);
     }

@@ -5,7 +5,7 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // New function to get questions based on career title
 async function getSkillAssessmentQuestions(careerTitle) {
     const prompt = `
-    Based on the career title "${careerTitle}", provide a list of 5 skill assessment questions.
+    Based on the career title "${careerTitle}", provide a list of 15 skill assessment questions.
     
     The format should be like this:
     - question

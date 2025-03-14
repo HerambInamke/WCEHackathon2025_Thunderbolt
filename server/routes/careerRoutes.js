@@ -13,4 +13,8 @@ router.post('/careername', careerController.getCareerByName);
 
 router.post('/multipleCareername', careerController.getMultipleCareers);
 
+router.post('/addRecommendedCareers', careerController.addRecommendedCareers);
+
+router.post('/addSkillTestResult', careerController.addSkillTestResult);
+
 module.exports = router;

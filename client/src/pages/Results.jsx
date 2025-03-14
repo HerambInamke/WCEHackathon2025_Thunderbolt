@@ -2,8 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTest } from '../context/TestContext';
 import CareerCard from '../components/CareerCard';
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 function Results() {
+
+  const auth = getAuth();
+  const db = getFirestore();
+  const user = auth.currentUser;
+
   const { recommendations } = useTest();
   const [recommendedCareers , setRecommendedCareers] = useState([])
 
@@ -31,6 +38,37 @@ function Results() {
 
     fetchCareer();
   },[])
+
+  useEffect(() => {
+    const addRecommendedCareers = async () => {
+        const user = auth.currentUser;
+        if (user) {
+            const email = user.email;
+            try {
+                const response = await fetch('http://localhost:3000/careers/addRecommendedCareers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email, recommendedCareerIds: recommendedCareers.map(career => career._id) }),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add recommended careers');
+                }
+
+                const result = await response.json();
+                console.log(result.message);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    };
+
+    if (recommendedCareers.length > 0) {
+        addRecommendedCareers();
+    }
+  }, [recommendedCareers]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
