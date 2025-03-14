@@ -12,6 +12,7 @@ function CareerCard({ career }) {
 
   useEffect(() => {
     const user = auth.currentUser;
+    console.log("User email: ", user?.email); 
     if (user) {
       const userId = user.email;
       const checkBookmarkStatus = async () => {
@@ -56,10 +57,11 @@ function CareerCard({ career }) {
 
         if (response.ok) {
           const data = await response.json();
-          setIsBookmarked(!isBookmarked);
-          console.log(data.message);
+          setIsBookmarked(data.isBookmarked); // Directly update based on server response
+          console.log(data.message); // You can remove this line in production, it's for debugging
         } else {
-          console.error("Failed to toggle bookmark");
+          const errorData = await response.json();
+          console.error("Failed to toggle bookmark", errorData); // Log the error response from backend
         }
       } catch (error) {
         console.error("Error toggling bookmark:", error);

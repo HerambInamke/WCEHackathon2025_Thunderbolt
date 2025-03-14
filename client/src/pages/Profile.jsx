@@ -18,7 +18,7 @@ const Profile = () => {
 
     return () => unsubscribe();
   }, []);
-
+  console.log(user)
   useEffect(() => {
     const fetchUserData = async () => {
       if (user) {
