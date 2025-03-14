@@ -101,6 +101,15 @@ function CareerExploration() {
     </div>
   );
 
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Explore Careers</h1>
@@ -141,7 +150,7 @@ function CareerExploration() {
           <nav className="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
             {/* Previous button */}
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
               className={`relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
                 currentPage === 1 
@@ -166,7 +175,7 @@ function CareerExploration() {
                 : (
                   <button
                     key={`page-${pageNumber}`}
-                    onClick={() => setCurrentPage(pageNumber)}
+                    onClick={() => handlePageChange(pageNumber)}
                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                       currentPage === pageNumber
                         ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
@@ -180,7 +189,7 @@ function CareerExploration() {
             
             {/* Next button */}
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               className={`relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
                 currentPage === totalPages 

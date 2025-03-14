@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import axios from "axios";
-import { Link } from "react-router-dom";
-import { BookmarkCheck, Award, History, ChevronRight, User, Mail, Calendar } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { BookmarkCheck, Award, History, ChevronRight, User, Mail, Calendar, LogOut } from "lucide-react";
+import CareerCard from "../components/CareerCard";
+import { useAuth } from "../context/AuthContext";
 
 const Profile = () => {
   const auth = getAuth();
+  const navigate = useNavigate();
+  const { setIsLoggedIn } = useAuth();
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
   const [bookmarkedCareers, setBookmarkedCareers] = useState([]);
-  const [testHistory, setTestHistory] = useState([]);
+  const [testHistory, setTestHistory] = useState({ personalityTests: [], skillGapTests: [] });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -37,14 +41,19 @@ const Profile = () => {
         const bookmarkResponse = await axios.post("http://localhost:3000/bookmark/get-bookmarks", {
           userId: user.email,
         });
-
         setBookmarkedCareers(bookmarkResponse.data.bookmarks || []);
 
+        // Fetch test history
         const testHistoryResponse = await axios.post("http://localhost:3000/api/users/test-history", {
           userId: user.email,
         });
+        console.log(testHistoryResponse.data) 
 
-        setTestHistory(testHistoryResponse.data.history || []);
+        // Assuming the response structure is { history: [...] }
+        setTestHistory({
+          personalityTests: testHistoryResponse.data.history.filter(test => test.name === 'Personality Assessment') || [],
+          skillGapTests: testHistoryResponse.data.history.filter(test => test.name === 'Skill Assessment') || [],
+        });
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
@@ -52,6 +61,31 @@ const Profile = () => {
 
     if (user) fetchUserData();
   }, [user]);
+
+  const handleUnbookmark = async (careerId) => {
+    try {
+      await axios.post("http://localhost:3000/bookmark/remove-bookmark", {
+        userId: user.email,
+        careerId: careerId,
+      });
+      
+      // Update the local state to remove the unbookmarked career
+      setBookmarkedCareers(bookmarkedCareers.filter(career => career._id !== careerId));
+    } catch (error) {
+      console.error("Error removing bookmark:", error);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem("user");
+      setIsLoggedIn(false);
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -117,12 +151,19 @@ const Profile = () => {
               <div className="mt-6 flex flex-wrap gap-3 justify-center md:justify-start">
                 <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-purple-100 text-purple-800">
                   <History className="w-4 h-4 mr-2" />
-                  {testHistory.length} Tests Completed
+                  {testHistory.personalityTests.length + testHistory.skillGapTests.length} Tests Completed
                 </span>
                 <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
                   <BookmarkCheck className="w-4 h-4 mr-2" />
                   {bookmarkedCareers.length} Careers Bookmarked
                 </span>
+                <button
+                  onClick={handleSignOut}
+                  className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </button>
               </div>
             </div>
           </div>
@@ -130,23 +171,26 @@ const Profile = () => {
 
         {/* Bookmarked Careers Section */}
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center mb-6">
             <BookmarkCheck className="w-6 h-6 mr-3 text-blue-500" />
             Bookmarked Careers
           </h2>
           {bookmarkedCareers.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {bookmarkedCareers.map((career) => (
-                <Link key={career._id} to={`/career-details/${career.name}`} className="block p-6 rounded-lg border hover:bg-blue-50 transition-all">
-                  <h3 className="text-lg font-semibold">{career.name}</h3>
-                  <p className="text-sm text-gray-500">{career.category}</p>
-                </Link>
+                <div key={career._id}>
+                  <CareerCard 
+                    career={career} 
+                    isBookmarked={true}
+                    onToggleBookmark={() => handleUnbookmark(career._id)}
+                  />
+                </div>
               ))}
             </div>
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-600">No bookmarked careers yet</p>
-              <Link to="/explore" className="inline-flex px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+              <p className="text-gray-600 mb-4">No bookmarked careers yet</p>
+              <Link to="/explore" className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                 Explore Careers
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Link>
@@ -156,22 +200,93 @@ const Profile = () => {
 
         {/* Test History Section */}
         <div className="bg-white rounded-xl shadow-md p-8">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center mb-4">
             <Award className="w-6 h-6 mr-3 text-green-500" />
             Test History
           </h2>
-          {testHistory.length > 0 ? (
-            <ul className="mt-4 space-y-3">
-              {testHistory.map((test, index) => (
-                <li key={index} className="p-4 bg-gray-50 rounded-lg border">
-                  <p className="text-lg font-medium">{test.testName}</p>
-                  <p className="text-gray-500">Score: {test.score}</p>
-                  <p className="text-gray-500">Date: {new Date(test.date).toLocaleDateString()}</p>
+
+          {/* Personality Tests */}
+          <h3 className="text-xl font-semibold mb-2">Personality Tests</h3>
+          {testHistory.personalityTests.length > 0 ? (
+            <ul className="mt-4 space-y-3 mb-6">
+              {testHistory.personalityTests.map((test, index) => (
+                <li key={index} className="p-4 bg-gray-50 rounded-lg border hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-lg font-medium">{test.name}</p>
+                      <p className="text-gray-500">Score: {test.score}</p>
+                      <p className="text-gray-500">Date: {new Date(test.date).toLocaleDateString()}</p>
+                    </div>
+                    <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                      Personality
+                    </span>
+                  </div>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-600 mt-4">No test history available</p>
+            <div className="p-4 bg-gray-50 rounded-lg border mb-6">
+              <p className="text-gray-600 mb-3">No personality tests taken yet</p>
+              <Link 
+                to="/test" 
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Take Personality Test
+              </Link>
+            </div>
+          )}
+
+          {/* Skill Gap Tests */}
+          <h3 className="text-xl font-semibold mb-2">Skill Gap Tests</h3>
+          {testHistory.skillGapTests.length > 0 ? (
+            <ul className="mt-4 space-y-3">
+              {testHistory.skillGapTests.map((test, index) => (
+                <li key={index} className="p-4 bg-gray-50 rounded-lg border hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-lg font-medium">{test.name}</p>
+                      <p className="text-gray-500">Score: {test.score}</p>
+                      <p className="text-gray-500">Date: {new Date(test.date).toLocaleDateString()}</p>
+                    </div>
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      Skill Assessment
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="p-4 bg-gray-50 rounded-lg border">
+              <p className="text-gray-600">No skill gap tests taken yet</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Skill gap tests are available for specific careers. Explore careers to find skill assessments.
+              </p>
+              <Link to="/explore" className="text-blue-600 hover:underline mt-2 inline-block">
+                Explore careers
+              </Link>
+            </div>
+          )}
+
+          {/* Show a message if no tests at all */}
+          {testHistory.personalityTests.length === 0 && testHistory.skillGapTests.length === 0 && (
+            <div className="mt-6 text-center p-6 bg-blue-50 rounded-lg">
+              <p className="text-gray-700 mb-2">You haven't taken any tests yet</p>
+              <p className="text-gray-600 mb-4">Taking tests will help you discover suitable career paths</p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Link 
+                  to="/test" 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Take Personality Test
+                </Link>
+                <Link 
+                  to="/explore" 
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                >
+                  Explore Careers
+                </Link>
+              </div>
+            </div>
           )}
         </div>
       </div>

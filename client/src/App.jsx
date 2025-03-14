@@ -54,12 +54,6 @@ function App() {
                   <div className="flex items-center">
                     {isLoggedIn ? (
                       <div className="flex items-center">
-                        <button
-                          onClick={() => setIsLoggedIn(false)}
-                          className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                          Sign Out
-                        </button>
                         <Link
                           to="/profile"
                           className="ml-4 inline-flex items-center text-gray-700 hover:text-gray-900"

@@ -19,32 +19,58 @@ const SkillAssessmentResults = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate()
 
-  useEffect(()=>{
-    const fetchSkillGapAnalysis = async () => {
-      setIsLoading(true);
-      try {
-        const email = auth.currentUser.email; // Replace with actual user email from auth context or state
-        const careerName = career.name; // Assuming career object has a name property
-        const score = result.percentage; // Assuming result object has a percentage property
-  
-        await axios.post('http://localhost:3000/careers/addSkillTestResult', {
-          email,
-          careerName,
-          score,
-        });
-        const ans = await getSkillGapAnalysis(career.name, questions, answers);
-        setSkillGapAnalysisResult(ans);
-        localStorage.setItem('skillGapAnalysis', JSON.stringify(ans));
-        setShowError(false);
-      } catch (error) {
-        console.error("Error submitting skill test result:", error);
+  useEffect(() => {
+  const fetchSkillGapAnalysis = async () => {
+    setIsLoading(true);
+    try {
+      const email = auth.currentUser.email;
+      const careerName = career.name;
+      const score = result.percentage;
+
+      // First send the test result to the backend
+      await axios.post('http://localhost:3000/careers/addSkillTestResult', {
+        email,
+        careerName,
+        score,
+      });
+      
+      // Make sure we have questions and answers before proceeding
+      if (!questions || !answers || questions.length === 0) {
+        console.error("Missing questions or answers data");
         setShowError(true);
-      } finally {
-        setIsLoading(false);
+        return;
       }
+      
+      // Log data for debugging
+      console.log("Questions:", questions);
+      console.log("Answers:", answers);
+      setShowError(false);
+    } catch (error) {
+      console.error("Error submitting skill test result:", error);
+      setShowError(true);
     }
-      fetchSkillGapAnalysis();
-  },[result])
+  };
+  
+  if (career && questions && answers && result) {
+    fetchSkillGapAnalysis();
+  } else {
+    console.error("Missing required data for skill gap analysis");
+    setIsLoading(false);
+  }
+}, [career, questions, answers, result]);
+
+useEffect(()=>{
+  let fetchGapAnaylsis = async () =>{
+    const ans = await getSkillGapAnalysis(career.name, questions, answers);
+    console.log("Skill Gap Analysis Result:", ans);
+    
+    // Set the result
+    setSkillGapAnalysisResult(Array.isArray(ans) ? ans : []);
+    setIsLoading(false)
+  }
+
+  fetchGapAnaylsis()
+},[career, questions, answers])
 
   const handleRatingChange = (rating) => {
     setReviewRating(rating);
@@ -105,13 +131,11 @@ const SkillAssessmentResults = () => {
             <>
               <h4 className="font-medium text-blue-800 mb-2">Skills to Improve:</h4>
               <ul className="list-disc list-inside text-blue-700 space-y-1">
-                {skillGapAnalysisResult.length > 0 ? (
+                {
                   skillGapAnalysisResult.map((skill, index) => (
                     <li key={index}>{skill}</li>
                   ))
-                ) : (
-                  <li>No skill gaps identified. Great job!</li>
-                )}
+                }
               </ul>
             </>
           )}
