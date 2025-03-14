@@ -10,6 +10,7 @@ import CareerDetails from "./pages/CareerDetails"
 import Profile from "./pages/Profile";
 import PersonalityTest from "./pages/PersonalityTest";
 import Results from "./pages/Results"
+import BookAppointment from "./pages/BookAppointment"
 
 function App() {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -90,8 +91,9 @@ function App() {
               <Route path="/explore" element={<CareerExploration/>}/>
               <Route path="/profile" element={<Profile/>}/>
               <Route path="/career-details/:name" element={<CareerDetails />}/>
-              <Route path="/test" element={<PersonalityTest setNavbarVisible={setIsNavbarVisible} />} />
+              <Route path="/test" element={<ProtectedRoute><PersonalityTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
               <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
+              <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>}/>
             </Routes>
           </main>
         </div>

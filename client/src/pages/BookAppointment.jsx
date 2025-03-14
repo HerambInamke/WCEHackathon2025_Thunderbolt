@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, User, Mail, Phone, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import BookAppointmentGIF from "../assets/bookappointment.gif";
 
@@ -74,6 +74,18 @@ const BookAppointment = () => {
         }
     ];
 
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = "https://assets.calendly.com/assets/external/widget.js";
+        script.async = true;
+        document.body.appendChild(script);
+
+        // Clean up the script when the component unmounts
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, []); // Empty dependency array to run once on mount
+
     if (submitted) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -101,13 +113,15 @@ const BookAppointment = () => {
                             </div>
                         </div>
                         <button
-                            onClick={() => {setFormData({
-                                name: '',
-                                email: '',
-                                phoneNumber: '',
-                                date: '',
-                                time: ''
-                            }); setSubmitted(false)}}
+                            onClick={() => {
+                                setFormData({
+                                    name: '',
+                                    email: '',
+                                    phoneNumber: '',
+                                    date: '',
+                                    time: ''
+                                }); setSubmitted(false)
+                            }}
                             className="mt-4 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
                         >
                             Book Another Appointment
@@ -123,7 +137,6 @@ const BookAppointment = () => {
             <div className="max-w-6xl mx-auto">
                 <div className="rounded-xl overflow-hidden mb-8">
                     <div className="md:flex items-center gap-5">
-
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 h-full flex items-center justify-center overflow-hidden">
                             <img
                                 className="w-full object-cover"
@@ -136,6 +149,18 @@ const BookAppointment = () => {
                             <div className="uppercase tracking-wide text-sm text-indigo-500 font-semibold mb-1">Career Guidance</div>
                             <h2 className="text-3xl font-bold text-gray-800 mb-4">Book a Consultation</h2>
                             <p className="text-gray-600 mb-8">Schedule a one-on-one session with our expert career consultants to get personalized guidance for your career journey.</p>
+
+                            <div>
+                                <p className="text-gray-600 mb-4">To book your appointment, please click the link below:</p>
+                                <a
+                                    href="https://calendly.com/ghodkeayush22/30min"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mb-10 w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                                >
+                                    Book Appointment via Calendly
+                                </a>
+                            </div>
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <div>

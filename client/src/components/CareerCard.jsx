@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Bookmark } from 'lucide-react';
 
 function CareerCard({ career }) {
   const navigate = useNavigate();
@@ -8,8 +9,16 @@ function CareerCard({ career }) {
     navigate(`/career-details/${career.name}`);
   };
 
+  // New handler for bookmarking
+  const handleBookmark = () => {
+    console.log(career._id); // Log the _id of the career
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-full h-full">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-full h-full relative">
+      <div className="absolute top-4 right-4">
+        <Bookmark className="h-6 w-6 text-gray-500 cursor-pointer" onClick={handleBookmark} />
+      </div>
       <div className="p-6 flex flex-col h-full justify-between">
         <div className='space-y-4'>
           <span className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
@@ -21,7 +30,7 @@ function CareerCard({ career }) {
           <p className="text-gray-600 mb-4">{career.description}</p>
         </div>
         
-        <div className="mt-5">
+        <div className="mt-5 flex space-x-2">
           <button 
             className="px-4 py-2 text-blue-600 bg-white font-medium rounded-md hover:bg-blue-700 hover:text-white transition-colors flex items-center border-blue-600 border-2"
             onClick={handleViewDetails}
