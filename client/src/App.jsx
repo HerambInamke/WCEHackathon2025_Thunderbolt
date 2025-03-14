@@ -7,6 +7,7 @@ import AuthPage from "./pages/AuthPage";
 import { LogIn, Menu, X, User } from "lucide-react";
 import CareerExploration from "./pages/CareerExploration";
 import CareerDetails from "./pages/CareerDetails"
+import Profile from "./pages/Profile";
 
 function App() {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -85,6 +86,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/explore" element={<CareerExploration/>}/>
+              <Route path="/profile" element={<Profile/>}/>
               <Route path="/career-details/:name" element={<CareerDetails />}/>
             </Routes>
           </main>
