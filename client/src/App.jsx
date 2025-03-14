@@ -91,13 +91,13 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/explore" element={<CareerExploration/>}/>
-              <Route path="/profile" element={<Profile/>}/>
+              <Route path="/explore" element={<ProtectedRoute><CareerExploration/></ProtectedRoute>}/>
+              <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
               <Route path="/career-details/:name" element={<CareerDetails />}/>
               <Route path="/test" element={<ProtectedRoute><PersonalityTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
               <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
               <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>}/>
-              <Route path="/skill-assessment/instructions/:careerId" element={<SkillAssessmentInstructions />} />
+              <Route path="/skill-assessment/instructions/:careerId" element={<ProtectedRoute><SkillAssessmentInstructions /></ProtectedRoute>} />
               <Route path="/skill-assessment/:careerId" element={<ProtectedRoute><SkillAssessmentTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
               <Route path="/skill-assessment/results" element={<ProtectedRoute><SkillAssessmentResults /></ProtectedRoute>} />
             </Routes>

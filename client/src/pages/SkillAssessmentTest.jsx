@@ -163,7 +163,15 @@ function SkillAssessmentTest({ setNavbarVisible }) {
       const testResult = calculateResults();
       setResult(testResult);
       setIsSubmitting(false);
-      navigate('/skill-assessment/results', { state: { result: testResult, career } });
+      // Include questions and answers in the navigation state
+      navigate('/skill-assessment/results', { 
+        state: { 
+          result: testResult, 
+          career, 
+          questions, // Add questions
+          answers // Add answers
+        } 
+      });
     }, 1500);
   };
 

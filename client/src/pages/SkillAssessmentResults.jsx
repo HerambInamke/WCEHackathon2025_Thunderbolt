@@ -1,23 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios for making HTTP requests
 import { getAuth } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getSkillGapAnalysis } from '../utils/getSkillGapAnalysis';
 
 const SkillAssessmentResults = () => {
   const auth = getAuth();
   const db = getFirestore();
   const user = auth.currentUser;
   const location = useLocation();
-  const { result, career } = location.state || {};
+  const { result, career, questions, answers } = location.state || {};
   const [reviewRating, setReviewRating] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [showError, setShowError] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [skillGapAnalysisResult , setSkillGapAnalysisResult] = useState([])
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate()
 
   useEffect(()=>{
-    let addResultToDb = async () =>{
+    const fetchSkillGapAnalysis = async () => {
+      setIsLoading(true);
       try {
         const email = auth.currentUser.email; // Replace with actual user email from auth context or state
         const careerName = career.name; // Assuming career object has a name property
@@ -28,16 +32,19 @@ const SkillAssessmentResults = () => {
           careerName,
           score,
         });
-  
+        const ans = await getSkillGapAnalysis(career.name, questions, answers);
+        setSkillGapAnalysisResult(ans);
+        localStorage.setItem('skillGapAnalysis', JSON.stringify(ans));
         setShowError(false);
       } catch (error) {
         console.error("Error submitting skill test result:", error);
         setShowError(true);
+      } finally {
+        setIsLoading(false);
       }
-    } 
-
-    addResultToDb()
-  },[])
+    }
+      fetchSkillGapAnalysis();
+  },[result])
 
   const handleRatingChange = (rating) => {
     setReviewRating(rating);
@@ -79,14 +86,35 @@ const SkillAssessmentResults = () => {
           <p className="text-gray-600 mt-2">You answered {result?.correctCount} out of {result?.totalQuestions} questions correctly.</p>
         </div>
         
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Skill Gap Analysis</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Your Answers</h3>
+        <ul className="list-disc list-inside text-gray-700 space-y-1">
+          {questions.map((question, index) => (
+            <li key={index}>
+              <strong>{question.question}</strong> {/* Assuming question has a text property */}
+              <p className={`${answers[index] == question.correctAnswer ? "text-green-700" : "text-red-500"}`}>Your answer: {answers[index]}</p> {/* Assuming question has options */}
+              <p>Correct answer: {question.correctAnswer}</p> {/* Assuming question has correctAnswer */}
+            </li>
+          ))}
+        </ul>
+
+        <h3 className="text-lg font-medium text-gray-900 mb-4 mt-10">Skill Gap Analysis</h3>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h4 className="font-medium text-blue-800 mb-2">Recommended Learning Path:</h4>
-          <ul className="list-disc list-inside text-blue-700 space-y-1">
-            {career.roadmap && career.roadmap.map((step, index) => (
-              <li key={index}>{step}</li>
-            ))}
-          </ul>
+          {isLoading ? (
+            <p className="text-blue-800">Analyzing skill gap...</p>
+          ) : (
+            <>
+              <h4 className="font-medium text-blue-800 mb-2">Skills to Improve:</h4>
+              <ul className="list-disc list-inside text-blue-700 space-y-1">
+                {skillGapAnalysisResult.length > 0 ? (
+                  skillGapAnalysisResult.map((skill, index) => (
+                    <li key={index}>{skill}</li>
+                  ))
+                ) : (
+                  <li>No skill gaps identified. Great job!</li>
+                )}
+              </ul>
+            </>
+          )}
         </div>
         
         {!reviewSubmitted ? (

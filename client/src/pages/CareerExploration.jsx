@@ -8,12 +8,14 @@ function CareerExploration() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchCareers = async () => {
       try {
         const response = await axios.get('http://localhost:3000/careers/');
         setCareers(response.data);
+        setIsLoading(false)
       } catch (error) {
         console.error('Error fetching careers:', error);
       }
@@ -87,6 +89,18 @@ function CareerExploration() {
     return pageNumbers;
   };
 
+  // Custom loader component
+  const Loader = () => (
+    <div className="flex flex-col items-center justify-center w-full py-20">
+      <div className="flex justify-center items-center space-x-2">
+        <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+        <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+        <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      </div>
+      <p className="mt-4 text-gray-600 font-medium">Loading careers...</p>
+    </div>
+  );
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Explore Careers</h1>
@@ -111,14 +125,18 @@ function CareerExploration() {
         </select>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentCareers.map(career => (
-          <CareerCard key={career.id} career={career} />
-        ))}
-      </div>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {currentCareers.map(career => (
+            <CareerCard key={career.id} career={career} />
+          ))}
+        </div>
+      )}
 
       {/* Improved Pagination Controls */}
-      {totalPages > 0 && (
+      {!isLoading && totalPages > 0 && (
         <div className="flex justify-center mt-8">
           <nav className="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
             {/* Previous button */}
@@ -180,9 +198,11 @@ function CareerExploration() {
       )}
       
       {/* Results counter */}
-      <div className="text-sm text-gray-500 text-center mt-4">
-        Showing {filteredCareers.length > 0 ? indexOfFirstCareer + 1 : 0} to {Math.min(indexOfLastCareer, filteredCareers.length)} of {filteredCareers.length} results
-      </div>
+      {!isLoading && (
+        <div className="text-sm text-gray-500 text-center mt-4">
+          Showing {filteredCareers.length > 0 ? indexOfFirstCareer + 1 : 0} to {Math.min(indexOfLastCareer, filteredCareers.length)} of {filteredCareers.length} results
+        </div>
+      )}
     </div>
   );
 }
