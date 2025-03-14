@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/userSchema'); // Import your User model
+const User = require('../models/userSchema');
 
 // Route to toggle a bookmark
 router.post('/toggle-bookmark', async (req, res) => {
@@ -52,6 +52,27 @@ router.post('/check-bookmark', async (req, res) => {
   } catch (error) {
     console.error("Error checking bookmark:", error);
     res.status(500).json({ message: 'Error checking bookmark' });
+  }
+});
+
+// Route to get all bookmarked careers
+router.post('/get-bookmarks', async (req, res) => {
+  const { userId } = req.body;
+
+  try {
+    const user = await User.findOne({ email: userId });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Populate the bookmarked careers with their details
+    const Career = require('../models/careers');
+    const bookmarks = await Career.find({ _id: { $in: user.bookmarkedCourses } });
+    
+    res.status(200).json({ bookmarks });
+  } catch (error) {
+    console.error("Error fetching bookmarks:", error);
+    res.status(500).json({ message: 'Error fetching bookmarks' });
   }
 });
 
