@@ -14,7 +14,7 @@ const AuthPage = () => {
 
   const storeUserInDB = async (email, provider) => {
     try {
-      await axios.post("/api/users", { email, provider });
+      await axios.post("http://localhost:3000/api/users/addUser", { email, provider });
     } catch (error) {
       console.error("Error storing user:", error);
     }
@@ -27,25 +27,31 @@ const AuthPage = () => {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
       } else {
         await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        await storeUserInDB(formData.email, "email"); // Store only on signup
       }
       setIsLoggedIn(true);
-      storeUserInDB(formData.email, "email");
       navigate("/");
     } catch (error) {
       console.error("Auth error:", error);
     }
   };
-
+  
   const handleGoogleAuth = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      storeUserInDB(result.user.email, "google");
+      
+      // Check if the user is new before adding to DB
+      if (result._tokenResponse.isNewUser) {
+        await storeUserInDB(result.user.email, "google");
+      }
+  
       setIsLoggedIn(true);
       navigate("/");
     } catch (error) {
       console.error("Google auth error:", error);
     }
   };
+  
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center px-4">
