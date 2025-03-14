@@ -1,60 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import { BookmarkCheck, Award, History, ChevronRight, User, Mail, Calendar } from "lucide-react";
 
 const Profile = () => {
   const auth = getAuth();
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const storedUser = localStorage.getItem("user");
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
   const [bookmarkedCareers, setBookmarkedCareers] = useState([]);
   const [testHistory, setTestHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+        localStorage.setItem("user", JSON.stringify(currentUser));
+      } else {
+        setUser(null);
+        localStorage.removeItem("user");
+      }
       setIsLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
-  console.log(user)
+
   useEffect(() => {
     const fetchUserData = async () => {
-      if (user) {
-        try {
-          const bookmarkResponse = await fetch("http://localhost:3000/bookmark/get-bookmarks", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userId: user.email }),
-          });
+      if (!user?.email) return;
 
-          if (!bookmarkResponse.ok) {
-            throw new Error("Failed to fetch bookmarks");
-          }
+      try {
+        const bookmarkResponse = await axios.post("http://localhost:3000/bookmark/get-bookmarks", {
+          userId: user.email,
+        });
 
-          const bookmarkData = await bookmarkResponse.json();
-          setBookmarkedCareers(bookmarkData.bookmarks || []);
+        setBookmarkedCareers(bookmarkResponse.data.bookmarks || []);
 
-          const testHistoryResponse = await fetch("http://localhost:3000/api/users/test-history", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ userId: user.email }),
-          });
+        const testHistoryResponse = await axios.post("http://localhost:3000/api/users/test-history", {
+          userId: user.email,
+        });
 
-          if (!testHistoryResponse.ok) {
-            throw new Error("Failed to fetch test history");
-          }
-
-          const historyData = await testHistoryResponse.json();
-          setTestHistory(historyData.history || []);
-        } catch (error) {
-          console.error("Error fetching user data:", error);
-        }
+        setTestHistory(testHistoryResponse.data.history || []);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     };
 
@@ -136,6 +128,7 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Bookmarked Careers Section */}
         <div className="bg-white rounded-xl shadow-md p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
             <BookmarkCheck className="w-6 h-6 mr-3 text-blue-500" />
@@ -161,29 +154,28 @@ const Profile = () => {
           )}
         </div>
 
+        {/* Test History Section */}
         <div className="bg-white rounded-xl shadow-md p-8">
           <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Award className="w-6 h-6 mr-3 text-blue-500" />
-            Recent Tests
+            <Award className="w-6 h-6 mr-3 text-green-500" />
+            Test History
           </h2>
           {testHistory.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <ul className="mt-4 space-y-3">
               {testHistory.map((test, index) => (
-                <div key={index} className="p-6 rounded-lg border hover:bg-green-50 transition-all">
-                  <h3 className="text-lg font-semibold">{test.name}</h3>
-                  <p className="text-sm text-gray-500">Completed on {new Date(test.date).toLocaleDateString()}</p>
-                </div>
+                <li key={index} className="p-4 bg-gray-50 rounded-lg border">
+                  <p className="text-lg font-medium">{test.testName}</p>
+                  <p className="text-gray-500">Score: {test.score}</p>
+                  <p className="text-gray-500">Date: {new Date(test.date).toLocaleDateString()}</p>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-lg">
-              <p className="text-gray-600">No tests taken yet</p>
-            </div>
+            <p className="text-gray-600 mt-4">No test history available</p>
           )}
         </div>
       </div>
     </div>
   );
 };
-
 export default Profile;
