@@ -1,67 +1,79 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FcGoogle } from 'react-icons/fc';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import GoogleIcon from "@mui/icons-material/Google"; // Google Icon
 import { useAuth } from "../context/AuthContext";
+import { auth, googleProvider, githubProvider } from "../../Configs/firebaseConfig";
+import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import axios from "axios";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const { setIsLoggedIn } = useAuth();
-  const navigate = useNavigate()
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoggedIn(true); // Set logged in state
-    navigate("/")
-    console.log('Form submitted:', formData);
+  const navigate = useNavigate();
+
+  const storeUserInDB = async (email, provider) => {
+    try {
+      await axios.post("/api/users", { email, provider });
+    } catch (error) {
+      console.error("Error storing user:", error);
+    }
   };
 
-  const handleGoogleAuth = () => {
-    console.log('Google auth clicked');
+  const handleEmailAuth = async (e) => {
+    e.preventDefault();
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      } else {
+        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      }
+      setIsLoggedIn(true);
+      storeUserInDB(formData.email, "email");
+      navigate("/");
+    } catch (error) {
+      console.error("Auth error:", error);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      storeUserInDB(result.user.email, "google");
+      setIsLoggedIn(true);
+      navigate("/");
+    } catch (error) {
+      console.error("Google auth error:", error);
+    }
   };
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-        <div>
-          <h2 className="text-center text-2xl font-bold text-gray-900 mb-2">
-            {isLogin ? 'Sign in to your account' : 'Create your account'}
-          </h2>
-          <p className="text-center text-sm text-gray-600">
-            {isLogin ? "Don't have an account? " : "Already have an account? "}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="font-medium text-blue-600 hover:text-blue-500"
-            >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
-        </div>
+        <h2 className="text-center text-2xl font-bold text-gray-900 mb-2">
+          {isLogin ? "Sign in to your account" : "Create your account"}
+        </h2>
+        <p className="text-center text-sm text-gray-600">
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <button onClick={() => setIsLogin(!isLogin)} className="font-medium text-blue-600 hover:text-blue-500">
+            {isLogin ? "Sign up" : "Sign in"}
+          </button>
+        </p>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-6 space-y-4" onSubmit={handleEmailAuth}>
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Username
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
             <input
-              id="username"
-              name="username"
-              type="text"
+              type="email"
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              value={formData.username}
-              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
             <input
-              id="password"
-              name="password"
               type="password"
               required
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
@@ -74,7 +86,7 @@ const AuthPage = () => {
             type="submit"
             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            {isLogin ? 'Sign in' : 'Sign up'}
+            {isLogin ? "Sign in" : "Sign up"}
           </button>
         </form>
 
@@ -90,9 +102,9 @@ const AuthPage = () => {
 
           <button
             onClick={handleGoogleAuth}
-            className="mt-4 w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="mt-4 w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
           >
-            <FcGoogle className="w-5 h-5 mr-2" />
+            <GoogleIcon className="w-5 h-5 mr-2 text-red-500" />
             Sign in with Google
           </button>
         </div>
