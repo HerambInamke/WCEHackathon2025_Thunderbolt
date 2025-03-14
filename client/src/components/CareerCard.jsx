@@ -11,30 +11,37 @@ function CareerCard({ career }) {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    console.log("User email: ", user?.email); 
-    if (user) {
-      const userId = user.email;
-      const checkBookmarkStatus = async () => {
-        const response = await fetch(`http://localhost:3000/bookmark/check-bookmark`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: userId,
-            careerId: career._id,
-          }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setIsBookmarked(data.isBookmarked);
-        }
-      };
-      checkBookmarkStatus();
-    }
-  }, [auth.currentUser, career._id]);
-
+    // Use Firebase's auth state observer instead of directly accessing currentUser
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        const userId = user.email;
+        const checkBookmarkStatus = async () => {
+          try {
+            const response = await fetch(`http://localhost:3000/bookmark/check-bookmark`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: userId,
+                careerId: career._id,
+              }),
+            });
+            if (response.ok) {
+              const data = await response.json();
+              setIsBookmarked(data.isBookmarked);
+            }
+          } catch (error) {
+            console.error("Error checking bookmark status:", error);
+          }
+        };
+        checkBookmarkStatus();
+      }
+    });
+  
+    // Clean up the observer when component unmounts
+    return () => unsubscribe();
+  }, [career._id]); // Add career._id as dependency
   const handleViewDetails = () => {
     navigate(`/career-details/${career.name}`);
   };
@@ -43,6 +50,9 @@ function CareerCard({ career }) {
     const user = auth.currentUser;
     if (user) {
       try {
+        // Optimistic update - immediately toggle the state for better user experience
+        setIsBookmarked(prevState => !prevState);
+        
         const userId = user.email;
         const response = await fetch('http://localhost:3000/bookmark/toggle-bookmark', {
           method: 'POST',
@@ -54,16 +64,23 @@ function CareerCard({ career }) {
             careerId: career._id,
           }),
         });
-
+  
         if (response.ok) {
           const data = await response.json();
-          setIsBookmarked(data.isBookmarked); // Directly update based on server response
-          console.log(data.message); // You can remove this line in production, it's for debugging
+          // If server state differs from our optimistic update, correct it
+          if (data.isBookmarked !== isBookmarked) {
+            setIsBookmarked(data.isBookmarked);
+          }
+          console.log(data.message);
         } else {
+          // If request fails, revert our optimistic update
+          setIsBookmarked(prevState => !prevState);
           const errorData = await response.json();
-          console.error("Failed to toggle bookmark", errorData); // Log the error response from backend
+          console.error("Failed to toggle bookmark", errorData);
         }
       } catch (error) {
+        // If request fails, revert our optimistic update
+        setIsBookmarked(prevState => !prevState);
         console.error("Error toggling bookmark:", error);
       }
     } else {
