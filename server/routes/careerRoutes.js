@@ -11,4 +11,6 @@ router.get('/careerId/:id', careerController.getCareerById);
 // Route to get career by name
 router.post('/careername', careerController.getCareerByName);
 
+router.post('/multipleCareername', careerController.getMultipleCareers);
+
 module.exports = router;

@@ -22,8 +22,9 @@ export function TestProvider({ children }) {
       setAnswers,
       updateAnswer, 
       recommendations, 
+      setRecommendations,
       calculateRecommendations 
-    }}>
+    }}> 
       {children}
     </TestContext.Provider>
   );

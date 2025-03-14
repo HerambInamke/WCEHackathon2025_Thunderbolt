@@ -7,6 +7,8 @@ import AuthPage from "./pages/AuthPage";
 import { LogIn, Menu, X, User } from "lucide-react";
 import CareerExploration from "./pages/CareerExploration";
 import CareerDetails from "./pages/CareerDetails"
+import PersonalityTest from "./pages/PersonalityTest";
+import Results from "./pages/Results"
 
 function App() {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -86,6 +88,8 @@ function App() {
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/explore" element={<CareerExploration/>}/>
               <Route path="/career-details/:name" element={<CareerDetails />}/>
+              <Route path="/test" element={<PersonalityTest setNavbarVisible={setIsNavbarVisible} />} />
+              <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
             </Routes>
           </main>
         </div>
