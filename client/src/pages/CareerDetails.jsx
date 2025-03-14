@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { fetchYouTubeResources } from '../services/youtube';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function CareerDetails() {
   const { name } = useParams();
@@ -8,13 +10,8 @@ function CareerDetails() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [resources, setResources] = useState([]);
-
-  // Mock YouTube resources - in a real app, these would come from an API
-  const mockYoutubeResources = [
-    { id: 'video1', title: 'Introduction to Career Path', thumbnail: 'https://via.placeholder.com/320x180', url: 'https://www.youtube.com/watch?v=example1' },
-    { id: 'video2', title: 'Essential Skills Overview', thumbnail: 'https://via.placeholder.com/320x180', url: 'https://www.youtube.com/watch?v=example2' },
-    { id: 'video3', title: 'Learning Roadmap Explained', thumbnail: 'https://via.placeholder.com/320x180', url: 'https://www.youtube.com/watch?v=example3' },
-  ];
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchCareer = async () => {
@@ -46,26 +43,23 @@ function CareerDetails() {
     navigate(`/skill-assessment/instructions/${name}`);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    // Mock search results - in a real app, this would call an API
-    if (searchQuery.trim()) {
-      setSearchResults([
-        { id: 'result1', title: `${searchQuery} for ${career?.name} - Tutorial`, thumbnail: 'https://via.placeholder.com/320x180', url: 'https://www.youtube.com/watch?v=search1' },
-        { id: 'result2', title: `Learn ${searchQuery} - Complete Guide`, thumbnail: 'https://via.placeholder.com/320x180', url: 'https://www.youtube.com/watch?v=search2' },
-      ]);
+  const handleGetResources = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      if (!import.meta.env.VITE_YOUTUBE_API_KEY) {
+        throw new Error('Please configure your YouTube API key in the .env file');
+      }
+      const videos = await fetchYouTubeResources(career, career.skills);
+      setResources(videos);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch resources. Please try again later.');
+      console.error('Error fetching resources:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleGetResources = () => {
-    // Mock fetching resources
-    const fetchedResources = [
-      { id: 'resource1', title: 'Resource 1', thumbnail: 'https://via.placeholder.com/320x180' },
-      { id: 'resource2', title: 'Resource 2', thumbnail: 'https://via.placeholder.com/320x180' },
-      { id: 'resource3', title: 'Resource 3', thumbnail: 'https://via.placeholder.com/320x180' },
-    ];
-    setResources(fetchedResources);
-  };
 
   if (!career) {
     return <div className="max-w-6xl mx-auto px-4 py-12">Loading...</div>;
@@ -126,25 +120,58 @@ function CareerDetails() {
             These are the essential skills required to excel as a {career.name}. Developing these skills will help you build a strong foundation for your career.
           </p>
           {/* Get Resources Button */}
-          {resources.length == 0 && <button 
-            onClick={handleGetResources} 
-            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Get Resources
-          </button>}
           {/* Resources Grid */}
-          {resources.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-              {resources.map((resource, index) => (
-                <div key={index} className="bg-white border rounded-lg overflow-hidden shadow-md">
-                  <img src={resource.thumbnail} alt={resource.title} className="w-full h-44 object-cover" />
-                  <div className="p-4">
-                    <h4 className="font-medium text-gray-800">{resource.title}</h4>
-                  </div>
-                </div>
-              ))}
+          <div className="space-y-6">
+            {resources.length === 0 && !isLoading && (
+              <button 
+                onClick={handleGetResources} 
+                className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors"
+                disabled={isLoading}
+              >
+                Get Resources
+              </button>
+            )}
+
+            {isLoading && (
+              <div className="flex justify-center">
+                <LoadingSpinner />
+              </div>
+            )}
+
+            {error && (
+              <div className="text-red-600 bg-red-50 p-4 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            {resources.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {resources.map((resource) => (
+                  <a
+                    key={resource.id}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block bg-white border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    <img 
+                      src={resource.thumbnail} 
+                      alt={resource.title} 
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <h4 className="font-medium text-gray-800 line-clamp-2 hover:text-blue-600">
+                        {resource.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                        {resource.description}
+                      </p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
             </div>
-          )}
         </div>
       </div>
 
