@@ -13,6 +13,7 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       fetchUserProfile(user.uid);
+      console.log(user)
     }
   }, [user]);
 

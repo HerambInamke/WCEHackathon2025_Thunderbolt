@@ -3,6 +3,7 @@ const app = express();
 const {connectToDb, isConnected} = require('./config/db')
 const careerRouter = require("./routes/careerRoutes")
 const userRoutes = require("./routes/userRoutes")
+const bookmarkRoutes = require("./routes/bookmarkRoutes")
 const cors = require("cors")
 
 connectToDb()
@@ -15,6 +16,7 @@ app.get("/" , (req , res)=>{
 
 app.use("/careers", careerRouter)
 app.use("/api/users", userRoutes);
+app.use("/bookmark", bookmarkRoutes)
 const PORT = process.env.PORT || 3000; 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`); 

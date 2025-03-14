@@ -1,23 +1,82 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, BookmarkCheck } from 'lucide-react';
+import { getAuth } from "firebase/auth";
+import { getFirestore, doc, updateDoc, arrayUnion } from "firebase/firestore";
 
 function CareerCard({ career }) {
   const navigate = useNavigate();
+  const auth = getAuth();
+  const db = getFirestore();
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      const userId = user.email;
+      const checkBookmarkStatus = async () => {
+        const response = await fetch(`http://localhost:3000/bookmark/check-bookmark`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,
+            careerId: career._id,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsBookmarked(data.isBookmarked);
+        }
+      };
+      checkBookmarkStatus();
+    }
+  }, [auth.currentUser, career._id]);
 
   const handleViewDetails = () => {
     navigate(`/career-details/${career.name}`);
   };
 
-  // New handler for bookmarking
-  const handleBookmark = () => {
-    console.log(career._id); // Log the _id of the career
+  const handleBookmark = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const userId = user.email;
+        const response = await fetch('http://localhost:3000/bookmark/toggle-bookmark', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,
+            careerId: career._id,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsBookmarked(!isBookmarked);
+          console.log(data.message);
+        } else {
+          console.error("Failed to toggle bookmark");
+        }
+      } catch (error) {
+        console.error("Error toggling bookmark:", error);
+      }
+    } else {
+      console.log("No user is logged in.");
+    }
   };
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow w-full h-full relative">
       <div className="absolute top-4 right-4">
-        <Bookmark className="h-6 w-6 text-gray-500 cursor-pointer" onClick={handleBookmark} />
+        {isBookmarked ? (
+          <BookmarkCheck className="h-6 w-6 text-blue-500 cursor-pointer" onClick={handleBookmark} />
+        ) : (
+          <Bookmark className="h-6 w-6 text-gray-500 cursor-pointer" onClick={handleBookmark} />
+        )}
       </div>
       <div className="p-6 flex flex-col h-full justify-between">
         <div className='space-y-4'>
