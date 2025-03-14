@@ -69,7 +69,7 @@ function CareerCard({ career }) {
           const data = await response.json();
           // If server state differs from our optimistic update, correct it
           if (data.isBookmarked !== isBookmarked) {
-            setIsBookmarked(data.isBookmarked);
+            setIsBookmarked(!isBookmarked);
           }
           console.log(data.message);
         } else {
