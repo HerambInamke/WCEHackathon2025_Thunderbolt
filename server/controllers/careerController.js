@@ -98,3 +98,18 @@ exports.addSkillTestResult = async (req, res) => {
         res.status(500).json({ message: 'Error updating user', error });
     }
 };
+
+exports.addPersonalityTestResult = async (req,res)=>{
+    const {email, recommendedCareers} = req.body;
+    try {
+        const user = await User.findOne({email:email})
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        user.personalityTests.push({date:new Date(),recommendedCareers:recommendedCareers})
+        await user.save();
+        res.status(200).json({ message: 'Skill test result added successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating user', error });
+    }
+}

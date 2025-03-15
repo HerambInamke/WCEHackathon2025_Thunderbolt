@@ -17,4 +17,5 @@ router.post('/addRecommendedCareers', careerController.addRecommendedCareers);
 
 router.post('/addSkillTestResult', careerController.addSkillTestResult);
 
+router.post("/addPersonalityTestResult", careerController.addPersonalityTestResult)
 module.exports = router;
