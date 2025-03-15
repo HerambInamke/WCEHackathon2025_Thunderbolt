@@ -14,6 +14,7 @@ import BookAppointment from "./pages/BookAppointment"
 import SkillAssessmentTest from "./pages/SkillAssessmentTest";
 import SkillAssessmentInstructions from "./pages/SkillAssessmentInstructions"
 import SkillAssessmentResults from "./pages/SkillAssessmentResults"
+import TawkToChat from "./components/TawkToChat";
 
 function App() {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -102,6 +103,7 @@ function App() {
               <Route path="/skill-assessment/results" element={<ProtectedRoute><SkillAssessmentResults /></ProtectedRoute>} />
             </Routes>
           </main>
+          <TawkToChat />
         </div>
       </TestProvider>
     </Router>

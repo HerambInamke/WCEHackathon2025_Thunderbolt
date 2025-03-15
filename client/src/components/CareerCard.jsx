@@ -11,7 +11,7 @@ function CareerCard({ career }) {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
-    const user = auth.currentUser;
+    const user = auth.currentUser; 
     console.log("User email: ", user?.email); 
     if (user) {
       const userId = user.email;
