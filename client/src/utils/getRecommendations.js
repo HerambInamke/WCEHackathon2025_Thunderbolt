@@ -63,7 +63,9 @@ async function getRecommendations(answersWithQuestions) {
         "Fashion Designer",
         "Speech-Language Pathologist",
         "Film Director",
-        "Environmental Scientist"
+        "Environmental Scientist",
+        "Cloud Solutions Architect", "DevOps Engineer", "Machine Learning Engineer", "Blockchain Developer", "Quantum Computing Researcher", "Robotics Engineer", "Artificial Intelligence Specialist", "Augmented Reality Developer", "Virtual Reality Designer", "Bioinformatics Scientist", "Geneticist", "Epidemiologist", "Medical Doctor", "Surgeon", "Anesthesiologist", "Nurse Practitioner", "Physician Assistant", "Occupational Therapist", "Respiratory Therapist", "Dietitian/Nutritionist", "Forensic Accountant", "Actuary", "Risk Management Specialist", "Compliance Officer", "Tax Consultant", "Technical Writer", "Copywriter", "Brand Strategist", "Market Research Analyst", "E-commerce Manager", "User Experience Researcher", "Information Security Engineer", "Network Administrator", "Database Administrator", "System Administrator", "Industrial Designer"
+
     ])}
 
       give me top 4 career recommendation titles(from the provided career options only) seperated by comma only(no description). 
