@@ -24,23 +24,25 @@ router.post("/test-history", async (req, res) => {
     // Combine personality tests into history if they exist
     if (user.personalityTests && user.personalityTests.length > 0) {
       console.log("Personality Tests:", user.personalityTests);
-      const personalityHistory = user.personalityTests.map(test => ({
+      const latestPersonality = user.personalityTests[user.personalityTests.length - 2]
+      const personalityHistory = {
         name: 'Personality Assessment',
-        date: test.date,
-        recommendedCareers: test.recommendedCareers
-      }));
-      history.push(...personalityHistory);
+        date: latestPersonality.date,
+        recommendedCareers: latestPersonality.recommendedCareers
+      };
+      history.push(personalityHistory);
     }
 
     // Combine skill gap tests into history if they exist
     if (user.skillgapTests && user.skillgapTests.length > 0) {
       console.log("Skill Gap Tests:", user.skillgapTests);
-      const skillGapHistory = user.skillgapTests.map(test => ({
+      const latestSkillGap = user.skillgapTests[user.skillgapTests.length - 1]
+      const skillGapHistory = {
         name: 'Skill Assessment',
-        date: test.date,
-        score: test.score
-      }));
-      history.push(...skillGapHistory);
+        date: latestSkillGap.date,
+        score: latestSkillGap.score
+      };
+      history.push(skillGapHistory);
     }
 
     // Sort the combined history by date, newest first
