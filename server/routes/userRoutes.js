@@ -27,7 +27,7 @@ router.post("/test-history", async (req, res) => {
       const personalityHistory = user.personalityTests.map(test => ({
         name: 'Personality Assessment',
         date: test.date,
-        score: test.score
+        recommendedCareers: test.recommendedCareers
       }));
       history.push(...personalityHistory);
     }
