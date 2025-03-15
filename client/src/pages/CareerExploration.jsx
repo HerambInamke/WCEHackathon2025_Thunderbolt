@@ -8,12 +8,14 @@ function CareerExploration() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(15);
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchCareers = async () => {
       try {
         const response = await axios.get('http://localhost:3000/careers/');
         setCareers(response.data);
+        setIsLoading(false)
       } catch (error) {
         console.error('Error fetching careers:', error);
       }
@@ -87,6 +89,27 @@ function CareerExploration() {
     return pageNumbers;
   };
 
+  // Custom loader component
+  const Loader = () => (
+    <div className="flex flex-col items-center justify-center w-full py-20">
+      <div className="flex justify-center items-center space-x-2">
+        <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '0ms' }}></div>
+        <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '150ms' }}></div>
+        <div className="w-4 h-4 rounded-full bg-blue-600 animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      </div>
+      <p className="mt-4 text-gray-600 font-medium">Loading careers...</p>
+    </div>
+  );
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-12">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Explore Careers</h1>
@@ -111,19 +134,23 @@ function CareerExploration() {
         </select>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentCareers.map(career => (
-          <CareerCard key={career.id} career={career} />
-        ))}
-      </div>
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {currentCareers.map(career => (
+            <CareerCard key={career.id} career={career} />
+          ))}
+        </div>
+      )}
 
       {/* Improved Pagination Controls */}
-      {totalPages > 0 && (
+      {!isLoading && totalPages > 0 && (
         <div className="flex justify-center mt-8">
           <nav className="inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
             {/* Previous button */}
             <button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
               className={`relative inline-flex items-center px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
                 currentPage === 1 
@@ -148,7 +175,7 @@ function CareerExploration() {
                 : (
                   <button
                     key={`page-${pageNumber}`}
-                    onClick={() => setCurrentPage(pageNumber)}
+                    onClick={() => handlePageChange(pageNumber)}
                     className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
                       currentPage === pageNumber
                         ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
@@ -162,7 +189,7 @@ function CareerExploration() {
             
             {/* Next button */}
             <button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               className={`relative inline-flex items-center px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
                 currentPage === totalPages 
@@ -180,9 +207,11 @@ function CareerExploration() {
       )}
       
       {/* Results counter */}
-      <div className="text-sm text-gray-500 text-center mt-4">
-        Showing {filteredCareers.length > 0 ? indexOfFirstCareer + 1 : 0} to {Math.min(indexOfLastCareer, filteredCareers.length)} of {filteredCareers.length} results
-      </div>
+      {!isLoading && (
+        <div className="text-sm text-gray-500 text-center mt-4">
+          Showing {filteredCareers.length > 0 ? indexOfFirstCareer + 1 : 0} to {Math.min(indexOfLastCareer, filteredCareers.length)} of {filteredCareers.length} results
+        </div>
+      )}
     </div>
   );
 }

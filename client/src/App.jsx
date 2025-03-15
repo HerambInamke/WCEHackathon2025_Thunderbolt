@@ -38,7 +38,9 @@ function App() {
                 <div className="flex justify-between h-16">
                   <div className="flex items-center">
                     <Link to="/" className="flex-shrink-0">
-                      <span className="text-xl font-bold text-blue-600">CareerCompass</span>
+                      <h1 className="text-2xl font-bold">
+                        Career<span className="text-blue-600">Compass</span>
+                      </h1>
                     </Link>
                     <div className="hidden md:ml-8 md:flex md:space-x-8">
                       <Link to="/explore" className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
@@ -53,12 +55,6 @@ function App() {
                   <div className="flex items-center">
                     {isLoggedIn ? (
                       <div className="flex items-center">
-                        <button
-                          onClick={() => setIsLoggedIn(false)}
-                          className="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                        >
-                          Sign Out
-                        </button>
                         <Link
                           to="/profile"
                           className="ml-4 inline-flex items-center text-gray-700 hover:text-gray-900"
@@ -92,13 +88,13 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/explore" element={<CareerExploration/>}/>
-              <Route path="/profile" element={<Profile/>}/>
+              <Route path="/explore" element={<ProtectedRoute><CareerExploration/></ProtectedRoute>}/>
+              <Route path="/profile" element={<ProtectedRoute><Profile/></ProtectedRoute>}/>
               <Route path="/career-details/:name" element={<CareerDetails />}/>
               <Route path="/test" element={<ProtectedRoute><PersonalityTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
               <Route path="/results" element={<ProtectedRoute><Results /></ProtectedRoute>} />
               <Route path="/book-appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>}/>
-              <Route path="/skill-assessment/instructions/:careerId" element={<SkillAssessmentInstructions />} />
+              <Route path="/skill-assessment/instructions/:careerId" element={<ProtectedRoute><SkillAssessmentInstructions /></ProtectedRoute>} />
               <Route path="/skill-assessment/:careerId" element={<ProtectedRoute><SkillAssessmentTest setNavbarVisible={setIsNavbarVisible} /></ProtectedRoute>} />
               <Route path="/skill-assessment/results" element={<ProtectedRoute><SkillAssessmentResults /></ProtectedRoute>} />
             </Routes>

@@ -17,6 +17,7 @@ function SkillAssessmentTest({ setNavbarVisible }) {
   useEffect(() => {
     setNavbarVisible(false); // Hide navbar when the test starts
 
+    enterFullscreen();
     // Fetch the career by name
     const fetchCareer = async () => {
       try {
@@ -81,8 +82,8 @@ function SkillAssessmentTest({ setNavbarVisible }) {
       }
     };
 
-    // document.addEventListener('fullscreenchange', handleFullscreenChange);
-    // document.addEventListener('visibilitychange', handleTabChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('visibilitychange', handleTabChange);
 
     setNavbarVisible(false); // Hide navbar when the test starts
 
@@ -163,7 +164,15 @@ function SkillAssessmentTest({ setNavbarVisible }) {
       const testResult = calculateResults();
       setResult(testResult);
       setIsSubmitting(false);
-      navigate('/skill-assessment/results', { state: { result: testResult, career } });
+      // Include questions and answers in the navigation state
+      navigate('/skill-assessment/results', { 
+        state: { 
+          result: testResult, 
+          career, 
+          questions, // Add questions
+          answers // Add answers
+        } 
+      });
     }, 1500);
   };
 

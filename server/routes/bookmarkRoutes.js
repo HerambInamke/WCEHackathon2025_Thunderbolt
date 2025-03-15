@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/userSchema'); // Import your User model
+const { getBookmarks } = require("../controllers/bookmarkController");
 
 // Route to toggle a bookmark
 router.post('/toggle-bookmark', async (req, res) => {
@@ -54,5 +55,8 @@ router.post('/check-bookmark', async (req, res) => {
     res.status(500).json({ message: 'Error checking bookmark' });
   }
 });
+
+router.post("/get-bookmarks", getBookmarks);
+
 
 module.exports = router;

@@ -16,19 +16,38 @@ router.post("/test-history", async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Combine personality and skill gap tests into one history
-    const history = [
-      ...user.personalityTests.map(test => ({
+    // Log user data for debugging
+
+    // Initialize the history array
+    const history = [];
+
+    // Combine personality tests into history if they exist
+    if (user.personalityTests && user.personalityTests.length > 0) {
+      console.log("Personality Tests:", user.personalityTests);
+      const personalityHistory = user.personalityTests.map(test => ({
         name: 'Personality Assessment',
         date: test.date,
         score: test.score
-      })),
-      ...user.skillgapTests.map(test => ({
+      }));
+      history.push(...personalityHistory);
+    }
+
+    // Combine skill gap tests into history if they exist
+    if (user.skillgapTests && user.skillgapTests.length > 0) {
+      console.log("Skill Gap Tests:", user.skillgapTests);
+      const skillGapHistory = user.skillgapTests.map(test => ({
         name: 'Skill Assessment',
         date: test.date,
         score: test.score
-      }))
-    ].sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort by date, newest first
+      }));
+      history.push(...skillGapHistory);
+    }
+
+    // Sort the combined history by date, newest first
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    // Log the combined history for debugging
+    console.log("Combined History:", history);
 
     res.status(200).json({ history });
   } catch (error) {
