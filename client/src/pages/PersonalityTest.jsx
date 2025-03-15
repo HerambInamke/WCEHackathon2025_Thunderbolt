@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { questions } from '../data/questions';
 import QuestionCard from '../components/QuestionCard';
 import { useTest } from '../context/TestContext';
+import { getAuth } from 'firebase/auth';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Snackbar from '../components/Snackbar';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ import { getRecommendations } from '../utils/getRecommendations';
 
 const PersonalityTest = ({ setNavbarVisible }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const auth = getAuth();
   const navigate = useNavigate()
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -81,10 +83,13 @@ const PersonalityTest = ({ setNavbarVisible }) => {
       }));
 
       const recommendedCareers = await getRecommendations(answersWithQuestions);
+      const email = auth.currentUser.email
+      await axios.post("http://localhost:3000/careers/addPersonalityTestResult",{
+        email,
+        recommendedCareers
+      })
       setAnswers({}); // Clear form state after submission
       exitFullscreen(); // Exit fullscreen when submitting
-
-      // Store recommendations in context
       console.log(recommendedCareers, "recommended")
       setRecommendations(recommendedCareers); // Update context with recommendations
       navigate('/results');

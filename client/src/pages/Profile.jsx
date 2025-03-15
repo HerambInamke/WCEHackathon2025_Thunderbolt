@@ -214,7 +214,9 @@ const Profile = () => {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-lg font-medium">{test.name}</p>
-                      <p className="text-gray-500">Score: {test.score}</p>
+                      {test.recommendedCareers.map((car, idx)=>{
+                        return <p>{car}</p>
+                      })}
                       <p className="text-gray-500">Date: {new Date(test.date).toLocaleDateString()}</p>
                     </div>
                     <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
