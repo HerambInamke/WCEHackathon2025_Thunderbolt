@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { TestProvider } from "./context/TestContext";
 import { useAuth } from "./context/AuthContext";
 import Home from "./pages/Home";
@@ -14,6 +14,7 @@ import BookAppointment from "./pages/BookAppointment"
 import SkillAssessmentTest from "./pages/SkillAssessmentTest";
 import SkillAssessmentInstructions from "./pages/SkillAssessmentInstructions"
 import SkillAssessmentResults from "./pages/SkillAssessmentResults"
+import TawkChat from "./components/TawkChat";
 
 function App() {
   const { isLoggedIn, setIsLoggedIn } = useAuth();
@@ -98,6 +99,9 @@ function App() {
               <Route path="/skill-assessment/results" element={<ProtectedRoute><SkillAssessmentResults /></ProtectedRoute>} />
             </Routes>
           </main>
+
+          {isNavbarVisible && <TawkChat />}
+
         </div>
       </TestProvider>
     </Router>
